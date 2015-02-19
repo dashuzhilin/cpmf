@@ -76,8 +76,8 @@ OBJ += scheduler.o thread_pool.o
 	$(CXX) $(CFLAGS) $(TP_FLAGS) $(DFLAGS) $(INCLUDE_FLAGS) -c -o $@ $<
 endif
 
-mf: cpmf/main.cpp $(OBJ)
-	$(CXX) $(CFLAGS) $(TP_FLAGS) $(DFLAGS) $(PICO_INC_FLAGS) $(INCLUDE_FLAGS) -o $@ $<
+mf: $(OBJ) cpmf/main.cpp cpmf/config.hpp cpmf/common/common.hpp cpmf/utils/utils.hpp cpmf/parallel/parallel.hpp
+	$(CXX) $(CFLAGS) $(TP_FLAGS) $(DFLAGS) $(PICO_INC_FLAGS) $(INCLUDE_FLAGS) -o mf $^
 
 clean:
 	rm -f mf $(OBJ)

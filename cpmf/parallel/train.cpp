@@ -1,6 +1,6 @@
 #include <cpmf/common/common.hpp>
 #include <cpmf/utils/utils.hpp>
-#include "switch.hpp"
+#include "parallel.hpp"
 
 namespace cpmf {
 namespace parallel {
