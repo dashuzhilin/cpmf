@@ -1,25 +1,29 @@
 {
   "base": {
-    "max_iter": 20,
+    "max_iter": 100,
     "num_threads": 4,
     "calc_rmse": true
   },
 
   "model": {
     "dimension": 40,
-    "step_size": 0.005,
-    "regularization_cost_for_P": 0.003,
-    "regularization_cost_for_Q": 0.003,
-    "read_model": true,
+    "step_size": 0.002,
+    "regularization_cost_for_P": 0.05,
+    "regularization_cost_for_Q": 0.05,
+    "read_model": false,
     "write_model": true,
     "output_path": "./model.bin"
   },
 
-  "data": {
-    "num_user_blocks": 4,
-    "num_item_blocks": 4,
-    "input_path": "./input/testdata",
-    "output_path": "./input/testdata.bin",
-    "randomize": true
+  "training": {
+    "num_user_blocks": 8,
+    "num_item_blocks": 8,
+    "path": "/Users/xxthermidorxx/Documents/Dataset/movie_lens/ml10mb.train",
+    "randomize": false
+  },
+
+  "test": {
+    "path": "/Users/xxthermidorxx/Documents/Dataset/movie_lens/ml10mb.test",
+    "randomize": false
   }
 }

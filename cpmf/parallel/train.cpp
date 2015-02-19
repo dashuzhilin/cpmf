@@ -6,6 +6,7 @@ namespace cpmf {
 namespace parallel {
 
 void train(const std::shared_ptr<cpmf::common::Matrix> R,
+           const std::shared_ptr<cpmf::common::Matrix> V,
            std::shared_ptr<cpmf::common::Model> model,
            const cpmf::BaseParams &base_params) {
   cpmf::utils::Timer timer;
@@ -15,7 +16,7 @@ void train(const std::shared_ptr<cpmf::common::Matrix> R,
 
   // print header
   if (base_params.calc_rmse) {
-    logger.put_table_header("iteration", 2, "time", "RMSE");
+    logger.put_table_header("iteration", 3, "time", "tr_rmse", "te_rmse");
   } else {
     logger.put_table_header("iteration", 1, "time");
   }
@@ -27,7 +28,8 @@ void train(const std::shared_ptr<cpmf::common::Matrix> R,
     scheduler.wait_for_all_blocks_processed();
     float iter_time = timer.pause();
     if (base_params.calc_rmse) {
-      logger.put_table_row(iter, 2, iter_time, model->calc_rmse());
+      logger.put_table_row(iter, 3, iter_time, model->calc_rmse(R),
+                           model->calc_rmse(V));
     } else {
       logger.put_table_row(iter, 1, iter_time);
     }

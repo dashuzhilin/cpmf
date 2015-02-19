@@ -23,17 +23,28 @@ Model::Model(const cpmf::ModelParams &model_params,
     fill_with_random_value(P, num_users_ * params_.dim);
     fill_with_random_value(Q, num_items_ * params_.dim);
   }
-  set_initial_losses(R->blocks);
+  //set_initial_losses(R->blocks);
 }
 
-float Model::calc_rmse() {
-  float sum = 0;
+float Model::calc_rmse(std::shared_ptr<Matrix> M) {
+  const int dim = params_.dim;
+  double loss = 0.0;
+  for (const auto &block : M->blocks) {
+    for (const auto &node : block.nodes) {
+      float * p = P.get() + (node.user_id - 1) * dim;
+      float * q = Q.get() + (node.item_id - 1) * dim;
+      float error = node.rating - std::inner_product(p, p+dim, q, 0.0);
+      loss += error * error;
+    }
+  }
+  return std::sqrt(loss/M->num_ratings);
+  /*float sum = 0;
   long num_ratings = 0;
   for (const auto &x : losses_) {
     sum += std::accumulate(x.begin(), x.end(), 0.0);
     num_ratings += x.size();
   }
-  return std::sqrt(sum/num_ratings);
+  return std::sqrt(sum/num_ratings);*/
 }
 
 void Model::fill_with_random_value(std::unique_ptr<float> &uniq_p,
@@ -112,9 +123,8 @@ void Model::write_to_disk() {
   }
 }
 
-void Model::show_info() {
-  std::string info = "";
-  info += "--- MODEL INFO---\n";
+void Model::show_info(const std::string &message) {
+  std::string info = message + "\n";
   info += "  dimension        : " + std::to_string(params_.dim) + "\n";
   info += "  step size        : " + std::to_string(params_.step_size) + "\n";
   info += "  regularizer of P : " + std::to_string(params_.lp) + "\n";

@@ -11,8 +11,7 @@ Matrix::Matrix(const cpmf::DataParams &data_params)
     : num_ratings(0), num_users(0), num_items(0),
       num_user_blocks(data_params.num_user_blocks),
       num_item_blocks(data_params.num_item_blocks),
-      input_path_(data_params.input_path),
-      output_path_(data_params.output_path) {
+      path_(data_params.path) {
   initialize_blocks();
 
   std::vector<Node> temp_nodes;
@@ -37,13 +36,14 @@ void Matrix::initialize_blocks() {
 }
 
 void Matrix::read(std::vector<Node> * temp_nodes) {
-  std::ifstream input_ifs(input_path_.c_str());
-  if (input_ifs.fail()) {
-    std::cerr << "FileReadError: Cannot open " << input_path_ << std::endl;
+  std::ifstream ifs(path_.c_str());
+  // TODO: exception has to be thrown
+  if (ifs.fail()) {
+    std::cerr << "FileReadError: Cannot open " << path_ << std::endl;
   }
 
   std::string line_buf;
-  while (getline(input_ifs, line_buf)) {
+  while (getline(ifs, line_buf)) {
     Node node;
     sscanf(line_buf.data(),
            "%d %d %f\n", &node.orig_user_id, &node.orig_item_id, &node.rating);
@@ -88,7 +88,7 @@ void Matrix::sort_nodes_by_user_id() {
   }
 }
 
-void Matrix::show_info() {
+void Matrix::show_info(const std::string &message) {
   int num_min_ratings = std::numeric_limits<int>::max();
   int num_max_ratings = 0;
   for (int bid = 0, num_blks = blocks.size(); bid < num_blks; bid++) {
@@ -97,8 +97,7 @@ void Matrix::show_info() {
     if (n > num_max_ratings) { num_max_ratings = n; }
   }
 
-  std::string info = "";
-  info += "--- MATRIX INFO ---\n";
+  std::string info = message + "\n";
   info += "  number of users       : " + std::to_string(num_users) + "\n";
   info += "  number of items       : " + std::to_string(num_items) + "\n";
   info += "  number of ratings     : " + std::to_string(num_ratings) + "\n";

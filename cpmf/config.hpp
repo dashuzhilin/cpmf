@@ -26,21 +26,22 @@ struct ModelParams {
 struct DataParams {
   DataParams() :
     randomize(false), num_user_blocks(1), num_item_blocks(1),
-    input_path("./input/testdata"), output_path("./output/testdata.bin") {}
+    path("./input/testdata") {}
 
   bool randomize;
   int num_user_blocks, num_item_blocks;
-  std::string input_path, output_path;
+  std::string path;
 };
 
 struct Config {
   Config() :
     base_params(BaseParams()), model_params(ModelParams()),
-    data_params(DataParams()) {}
+    training_params(DataParams()), test_params(DataParams()) {}
 
   BaseParams base_params;
   ModelParams model_params;
-  DataParams data_params;
+  DataParams training_params;
+  DataParams test_params;
 };
 
 } // namespace cpmf

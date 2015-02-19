@@ -44,7 +44,8 @@ std::unique_ptr<cpmf::Config> parse_config_json(std::ifstream &conf_ifs) {
   std::unique_ptr<cpmf::Config> config(new cpmf::Config);
   cpmf::BaseParams bp;
   cpmf::ModelParams mp;
-  cpmf::DataParams dp;
+  cpmf::DataParams trp;
+  cpmf::DataParams tep;
   const picojson::value::object &obj = v.get<picojson::object>();
   for (auto i = obj.begin(), i_end = obj.end(); i != i_end; ++i) {
     std::string type = i->first;
@@ -79,24 +80,28 @@ std::unique_ptr<cpmf::Config> parse_config_json(std::ifstream &conf_ifs) {
           mp.output_path = val.get<std::string>();
         }
 
-      } else if (type == "data") {
+      } else if (type == "training") {
         if (key == "num_user_blocks") {
-          dp.num_user_blocks = static_cast<float>( val.get<double>() );
+          trp.num_user_blocks = static_cast<float>( val.get<double>() );
         } else if (key == "num_item_blocks") {
-          dp.num_item_blocks = static_cast<float>( val.get<double>() );
-        } else if (key == "input_path") {
-          dp.input_path = val.get<std::string>();
-        } else if (key == "output_path") {
-          dp.output_path = val.get<std::string>();
+          trp.num_item_blocks = static_cast<float>( val.get<double>() );
+        } else if (key == "path") {
+          trp.path = val.get<std::string>();
         } else if (key == "randomize") {
-          dp.randomize = val.get<bool>();
+          trp.randomize = val.get<bool>();
+        }
+
+      } else if (type == "test") {
+        if (key == "path") {
+          tep.path = val.get<std::string>();
         }
       }
     }
   }
   config->base_params = bp;
   config->model_params = mp;
-  config->data_params = dp;
+  config->training_params = trp;
+  config->test_params = tep;
 
   return config;
 }
@@ -133,22 +138,29 @@ int main(int argc, char *argv[]) {
 
   cpmf::utils::Timer timer;
 
-  // parse input_data
-  timer.start("Now parsing input data...");
+  // parse training data
+  timer.start("Now parsing training data...");
   std::shared_ptr<cpmf::common::Matrix>
-    R(new cpmf::common::Matrix(config->data_params));
+    R(new cpmf::common::Matrix(config->training_params));
   timer.stop("ends.");
-  R->show_info();
+  R->show_info("=== TRAINING INFO ===");
+
+  // parse test data
+  timer.start("Now parsing test data...");
+  std::shared_ptr<cpmf::common::Matrix>
+    V(new cpmf::common::Matrix(config->test_params));
+  timer.stop("ends.");
+  V->show_info("=== TEST INFO ===");
 
   // initialize model
   timer.start("Now initializing model...");
   std::shared_ptr<cpmf::common::Model>
     model(new cpmf::common::Model(config->model_params, R));
   timer.stop("ends.");
-  model->show_info();
+  model->show_info("=== MODEL INFO ===");
 
   // begin training
-  cpmf::parallel::train(R, model, config->base_params);
+  cpmf::parallel::train(R, V, model, config->base_params);
 
   // write model to disk
   timer.start("Writing model...");

@@ -30,7 +30,7 @@ struct Block {
 class Matrix {
  public:
   Matrix(const cpmf::DataParams &data_params);
-  void show_info();
+  void show_info(const std::string &message);
 
   long num_ratings;
   int num_users, num_items, num_user_blocks, num_item_blocks;
@@ -45,8 +45,7 @@ class Matrix {
                     const std::vector<int> &item_mapping);
   void sort_nodes_by_user_id();
 
-  std::string input_path_;
-  std::string output_path_;
+  std::string path_;
 };
 
 
@@ -55,9 +54,9 @@ class Model {
   Model(const cpmf::ModelParams &model_params, const std::shared_ptr<Matrix> R);
 
   inline void sgd(const int &block_id, const Block &block);
-  float calc_rmse();
+  float calc_rmse(std::shared_ptr<Matrix> M);
   void write_to_disk();
-  void show_info();
+  void show_info(const std::string &message);
 
  private:
   void fill_with_random_value(std::unique_ptr<float> &uniq_p, const int &size);
@@ -73,18 +72,20 @@ class Model {
 inline void Model::sgd(const int &block_id, const Block &block) {
   const int dim = params_.dim;
   const float step_size = params_.step_size;
+  const float lp = 1 - step_size * params_.lp;
+  const float lq = 1 - step_size * params_.lq;
 
   for (int nid = 0, num_nodes = block.nodes.size(); nid < num_nodes; nid++) {
-    const auto &node = block.nodes[nid];
+    const Node &node = block.nodes[nid];
     // TODO: duplicate calculation
     float * p = P.get() + (node.user_id - 1) * dim;
     float * q = Q.get() + (node.item_id - 1) * dim;
     float error = node.rating - std::inner_product(p, p+dim, q, 0.0);
-    losses_[block_id][nid] = error * error;
+    //losses_[block_id][nid] = error * error;
     for (int d = 0; d < dim; d++) {
       float temp = p[d];
-      p[d] += (error * q[d] - params_.lp * p[d]) * step_size;
-      q[d] += (error * temp - params_.lq * q[d]) * step_size;
+      p[d] = error * q[d] * step_size + lp * p[d];
+      q[d] = error * temp * step_size + lq * q[d];
     }
   }
 }
